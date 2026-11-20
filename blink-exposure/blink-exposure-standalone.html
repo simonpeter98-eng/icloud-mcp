@@ -1,0 +1,804 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<!--
+  Blink Exposure — a short guided exposure for sensorimotor (somatic) OCD focused on blinking.
+
+  Approach:
+  - Exposure and Response Prevention (ERP): deliberate contact with the feared sensation while
+    refraining from rituals (checking, controlling, neutralising, avoiding). Foa, Yadin & Lichner (2012),
+    "Exposure and Response (Ritual) Prevention for Obsessive-Compulsive Disorder", Oxford Univ. Press.
+  - Inhibitory-learning framing: the aim is tolerating the sensation and the uncertainty, not making
+    anxiety drop within the session. Craske et al. (2014), Behav Res Ther 58:10-23.
+  - ACT-style acceptance and defusion (labelling "noticing blinking", allowing urges without acting).
+    Twohig et al. (2010), J Consult Clin Psychol 78(5):705-716 (ACT for OCD).
+  Design choices: no reassurance or "it will go away" language; the widening phase keeps blinking
+  in awareness so it is not used as distraction; the focal shape drifts slowly and is NOT a breath
+  pacer, so it cannot become a calming ritual.
+  This tool supports, and does not replace, work with a clinician trained in ERP.
+-->
+<title>Blink Exposure</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one quiet column; the session view gives the focal shape the whole screen. */
+:root {
+  --bg: #eaeff0;
+  --surface: #f6f9f9;
+  --ink: #1d292d;
+  --muted: #56676c;
+  --line: #cfd9db;
+  --accent: #3f6f75;
+  --accent-ink: #f4f8f8;
+  --shape-a: #a9c3c5;
+  --shape-b: #c9d8d4;
+  --pre: #8b8f7a;
+  --glow: #f8fbfa;
+  --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11181a; --surface: #182124; --ink: #dbe5e6; --muted: #8d9fa3; --line: #29363a;
+    --accent: #86b2b7; --accent-ink: #0f1618; --shape-a: #2f4b4f; --shape-b: #26393a; --pre: #a4a68f; --glow: #1a2629;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11181a; --surface: #182124; --ink: #dbe5e6; --muted: #8d9fa3; --line: #29363a;
+  --accent: #86b2b7; --accent-ink: #0f1618; --shape-a: #2f4b4f; --shape-b: #26393a; --pre: #a4a68f; --glow: #1a2629;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 17px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 560px; margin: 0 auto; padding-block: 28px 40px; display: grid; gap: 28px; }
+h1 { font-size: 1.6rem; line-height: 1.2; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h2 { font-size: 1.15rem; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 0.88rem; }
+.eyebrow { font-size: 0.75rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.stack { display: grid; gap: 12px; }
+.stack-lg { display: grid; gap: 22px; }
+.note { border-left: 3px solid var(--line); padding-left: 12px; font-size: 0.88rem; color: var(--muted); }
+
+/* Segmented choices */
+.seg { display: flex; flex-wrap: wrap; gap: 8px; }
+.seg button, .suds button {
+  font: inherit; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; cursor: pointer;
+}
+.seg button { padding: 10px 18px; }
+.seg button[aria-pressed="true"], .suds button[aria-pressed="true"] {
+  background: var(--accent); color: var(--accent-ink); border-color: var(--accent);
+}
+.suds { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 5px; }
+.suds button { padding: 12px 0; font-family: var(--font-data); font-variant-numeric: tabular-nums; font-size: 1rem; }
+.suds-anchors { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); }
+@media (max-width: 420px) {
+  .suds { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .suds-anchors { display: none; }
+  .suds-legend { display: block !important; }
+}
+.suds-legend { display: none; font-size: 0.78rem; color: var(--muted); }
+
+.btn {
+  font: inherit; font-weight: 700; padding: 14px 22px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+}
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); font-weight: 400; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+label.toggle { display: flex; gap: 10px; align-items: center; cursor: pointer; }
+label.toggle input { width: 20px; height: 20px; accent-color: var(--accent); }
+.voice-row { display: flex; gap: 8px; align-items: stretch; }
+.voice-row select {
+  flex: 1; min-width: 0; font: inherit; font-size: 0.95rem; padding: 10px 12px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+}
+.voice-row .btn { padding: 10px 16px; }
+select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* Session view: progress track on top, focal shape with its label in the middle, spoken line below.
+   On wide screens the shape and the words sit side by side. */
+#session {
+  position: fixed; inset: 0; z-index: 5; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; row-gap: 12px;
+  background: radial-gradient(110% 75% at 50% 40%, var(--glow) 0%, var(--bg) 72%);
+  padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  animation: sessIn 0.9s ease both;
+}
+#session.leaving { animation: sessOut 0.6s ease both; }
+@keyframes sessIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sessOut { from { opacity: 1; } to { opacity: 0; } }
+#session.idle { cursor: none; }
+
+.s-top { display: flex; align-items: flex-start; gap: 16px; max-width: 560px; width: 100%; margin: 0 auto; }
+.track { flex: 1; min-width: 0; display: flex; gap: 4px; }
+.track .ph { flex: var(--f) 1 0; min-width: 46px; display: grid; gap: 7px; }
+.track .bar { height: 3px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.track .bar i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 2px; }
+.track .lbl { font-size: 0.68rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.8s ease; }
+.track .ph.on .lbl { color: var(--ink); font-weight: 700; }
+.clock { font-family: var(--font-data); font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.95rem; line-height: 1; padding-top: 0; }
+
+.stage { display: grid; place-items: center; min-height: 0; position: relative; }
+.stage > * { grid-area: 1 / 1; }
+.stage canvas { width: min(80vw, 44vh, 400px); height: min(80vw, 44vh, 400px); }
+.anchor {
+  max-width: min(46vw, 24vh, 220px); text-align: center; text-wrap: balance;
+  font-size: clamp(0.95rem, 0.6rem + 1.2vh, 1.15rem); letter-spacing: 0.01em; color: var(--ink);
+  opacity: 0.78; transition: opacity 1.4s ease;
+}
+.anchor.swap { opacity: 0; }
+
+.s-bottom { max-width: 560px; width: 100%; margin: 0 auto; display: grid; gap: 14px; justify-items: center; }
+.s-phase { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); font-weight: 700; min-height: 1em; }
+.caption {
+  max-width: 30ch; min-height: 4.4em; text-align: center; text-wrap: balance;
+  font-size: clamp(1.1rem, 0.85rem + 1.1vw, 1.4rem); line-height: 1.45;
+}
+.caption span { opacity: 0.38; transition: opacity 0.7s ease; }
+.caption span.now, .caption.all span { opacity: 1; }
+.caption.enter { animation: capIn 0.8s ease both; }
+@keyframes capIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+.s-controls { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; transition: opacity 0.9s ease; }
+#session.idle .s-controls { opacity: 0.35; }
+.pill {
+  font: inherit; font-size: 0.92rem; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+  padding: 10px 18px; border-radius: 999px; border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 70%, transparent); color: var(--ink);
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+.pill:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.pill .cross { display: none; }
+.pill.muted .wave { display: none; }
+.pill.muted .cross { display: inline; }
+.pill.muted { color: var(--muted); }
+#endBtn.armed { border-color: var(--accent); color: var(--accent); }
+
+@media (min-width: 860px) and (min-aspect-ratio: 5/4) {
+  #session { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); column-gap: 56px; }
+  .s-top { grid-column: 1 / -1; max-width: 1000px; }
+  .stage { grid-column: 1; grid-row: 2; justify-self: end; }
+  .stage canvas { width: min(40vw, 62vh, 460px); height: min(40vw, 62vh, 460px); }
+  .anchor { max-width: min(20vw, 30vh, 220px); }
+  .s-bottom { grid-column: 2; grid-row: 2; align-self: center; justify-self: start; justify-items: start; margin: 0; max-width: 440px; }
+  .caption { text-align: left; min-height: 6em; }
+  .s-controls { justify-content: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #session, #session.leaving, .caption.enter { animation: none; }
+}
+
+/* Trend */
+.chart-wrap { overflow-x: auto; }
+.chart text { fill: var(--muted); font-family: var(--font-data); font-size: 11px; }
+.legend { display: flex; gap: 16px; font-size: 0.85rem; color: var(--muted); flex-wrap: wrap; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th, td { text-align: left; padding: 7px 4px; border-bottom: 1px solid var(--line); }
+th { font-weight: 700; color: var(--muted); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; }
+td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+.result-pair { display: flex; gap: 28px; align-items: baseline; flex-wrap: wrap; }
+.result-pair b { font-family: var(--font-data); font-size: 2.2rem; font-weight: 500; }
+footer { font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+
+<main id="app">
+  <!-- SETUP -->
+  <section id="setup" class="stack-lg">
+    <div class="stack">
+      <p class="eyebrow">Sensorimotor exposure · blinking</p>
+      <h1>Notice blinking on purpose, and let it stay.</h1>
+      <p class="muted">A short guided session. You bring attention to your blinking, label it, and leave the urge to control or check it unanswered.</p>
+    </div>
+
+    <div class="stack">
+      <h2>Length</h2>
+      <div class="seg" id="lengthSeg" role="group" aria-label="Session length">
+        <button type="button" id="len1" data-min="1" aria-pressed="false">1 min</button>
+        <button type="button" id="len2" data-min="2" aria-pressed="true">2 min</button>
+        <button type="button" id="len3" data-min="3" aria-pressed="false">3 min</button>
+      </div>
+    </div>
+
+    <div class="stack">
+      <h2>Anxiety right now (SUDS 0–10)</h2>
+      <div class="suds" id="sudsPre" role="group" aria-label="Anxiety before, 0 to 10"></div>
+      <div class="suds-anchors"><span>0 none</span><span>5 moderate</span><span>10 extreme</span></div>
+      <p class="suds-legend">0 none · 5 moderate · 10 extreme</p>
+    </div>
+
+    <div class="stack">
+      <h2>Voice</h2>
+      <label class="toggle"><input type="checkbox" id="voiceOn" checked> Voice guidance</label>
+      <div class="stack" id="voiceControls">
+        <div class="voice-row">
+          <select id="voiceSel" aria-label="Choose a voice"><option>Loading voices…</option></select>
+          <button class="btn ghost" id="previewBtn" type="button">Preview</button>
+        </div>
+        <div class="seg" id="paceSeg" role="group" aria-label="Speaking pace">
+          <button type="button" id="paceSlow" data-pace="slow" aria-pressed="false">Slow</button>
+          <button type="button" id="paceCalm" data-pace="calm" aria-pressed="true">Calm</button>
+          <button type="button" id="paceNatural" data-pace="natural" aria-pressed="false">Natural</button>
+        </div>
+        <p class="note" id="voiceTip" hidden></p>
+      </div>
+      <p class="small muted" id="voiceNote">Text appears on screen either way.</p>
+    </div>
+
+    <div class="row">
+      <button class="btn" id="startBtn" type="button" disabled>Rate anxiety to begin</button>
+    </div>
+
+    <p class="note">This supports, and does not replace, work with a clinician trained in ERP.</p>
+  </section>
+
+  <!-- POST RATING -->
+  <section id="post" class="stack-lg" hidden>
+    <div class="stack">
+      <p class="eyebrow" id="postEyebrow">Session complete</p>
+      <h1>Anxiety right now (SUDS 0–10)</h1>
+      <p class="muted">Rate it as it is. There is no right number.</p>
+    </div>
+    <div class="stack">
+      <div class="suds" id="sudsPost" role="group" aria-label="Anxiety after, 0 to 10"></div>
+      <div class="suds-anchors"><span>0 none</span><span>5 moderate</span><span>10 extreme</span></div>
+      <p class="suds-legend">0 none · 5 moderate · 10 extreme</p>
+    </div>
+    <div class="row"><button class="btn" id="saveBtn" type="button" disabled>Save rating</button></div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results" class="stack-lg" hidden>
+    <div class="stack" id="lastResult"></div>
+    <div class="row">
+      <button class="btn" id="repeatBtn" type="button">Repeat session</button>
+      <button class="btn ghost" id="homeBtn" type="button">Change settings</button>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="history" class="stack-lg">
+    <div class="stack">
+      <h2>Sessions over time</h2>
+      <p class="small muted">Ratings are information, not a score. A session counts whether anxiety went up, down, or stayed the same.</p>
+    </div>
+    <div id="trend"></div>
+    <div class="row" id="clearRow"></div>
+  </section>
+
+  <footer>Ratings are stored only in this browser on this device.</footer>
+</main>
+
+<!-- SESSION OVERLAY -->
+<div id="session" hidden>
+  <div class="s-top">
+    <div class="track" id="track" aria-hidden="true"></div>
+    <div class="clock" id="clock" aria-label="Time left">2:00</div>
+  </div>
+  <div class="stage">
+    <canvas id="shape" width="760" height="760" aria-hidden="true"></canvas>
+    <p class="anchor" id="anchor"></p>
+  </div>
+  <div class="s-bottom">
+    <p class="s-phase" id="sPhase"></p>
+    <p class="caption" id="caption" aria-live="polite"></p>
+    <div class="s-controls">
+      <button class="pill" id="muteBtn" type="button" aria-label="Turn voice off">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path class="wave" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path class="cross" d="M16 9.5l5 5m0-5l-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span id="muteLabel">Voice on</span>
+      </button>
+      <button class="pill" id="endBtn" type="button"><span id="endLabel">End session</span></button>
+    </div>
+  </div>
+</div>
+
+<!--KOKORO_AUDIO-->
+<script>
+(() => {
+  // ---------- Script ----------
+  // [minimum session length in minutes for the line to be included, text]
+  // Written for the ear: short sentences, contractions, and each sentence is spoken as its own
+  // utterance with a pause after it, so the voice breathes instead of reading a paragraph.
+  const SCRIPT = [
+    { name: "Notice", frac: 0.25, anchor: "blinking, on purpose", lines: [
+      [1, "Let your eyes rest on the shape. Or anywhere soft in front of you."],
+      [1, "Now, gently, bring your attention to your blinking. On purpose."],
+      [2, "Notice each blink. The lids closing. And opening. That brief moment of dark in between."],
+      [3, "Notice the eyes themselves. Any moisture, or dryness. The weight of the lids. Any tightness around them."],
+    ]},
+    { name: "Allow", frac: 0.35, anchor: "noticing blinking", lines: [
+      [1, "Let it be as noticeable as it is. And quietly name it. Noticing blinking."],
+      [1, "There might be an urge to fix the rhythm, or check it, or look away from it. See if you can notice that urge, and leave it unanswered."],
+      [2, "You can name that too. Noticing an urge."],
+      [2, "If you catch yourself controlling the blink, just notice that. Then let the blinking do whatever it does."],
+      [3, "There's no need to make it smaller. Make some room for it."],
+      [3, "Noticing blinking. Noticing the eyes."],
+    ]},
+    { name: "Widen", frac: 0.28, anchor: "blinking, with breath, body and sound", lines: [
+      [1, "Keep blinking in view. And let your attention widen, to include your breath, and your body."],
+      [2, "Your feet. Your hands. The places where your body meets the chair, or the floor."],
+      [1, "Now add the sounds around you. Near, and far. Blinking is still here too, in the background."],
+      [3, "You're not moving away from blinking. You're letting the space around it get bigger."],
+      [3, "Blinking. Breath. Body. Sound. All here, at the same time."],
+    ]},
+    { name: "Close", frac: 0.12, anchor: "let it come with you", lines: [
+      [1, "The session is coming to an end. Blinking may stay noticeable. Let it come with you."],
+      [2, "When you're ready, rate your anxiety as it is, right now."],
+    ]},
+  ];
+  const PREVIEW_TEXT = "Bring your attention to your blinking. On purpose. Noticing blinking.";
+
+  // ---------- Storage (all guarded) ----------
+  const KEY = "blinkExposure.sessions.v1";
+  const PREF = "blinkExposure.prefs.v1";
+  const load = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } };
+  const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } };
+
+  const prefs = Object.assign({ minutes: 2, voice: true, pace: "calm", voiceId: null }, load(PREF, {}));
+  const state = { minutes: prefs.minutes, voice: prefs.voice, pace: prefs.pace, pre: null, post: null, endedEarly: false };
+
+  const $ = id => document.getElementById(id);
+
+  // ---------- SUDS pickers ----------
+  function buildSuds(container, onPick) {
+    for (let i = 0; i <= 10; i++) {
+      const b = document.createElement("button");
+      b.type = "button"; b.textContent = i; b.id = container.id + "-" + i;
+      b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", () => {
+        container.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", "false"));
+        b.setAttribute("aria-pressed", "true");
+        onPick(i);
+      });
+      container.appendChild(b);
+    }
+  }
+  const resetSuds = c => c.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", "false"));
+
+  buildSuds($("sudsPre"), v => { state.pre = v; $("startBtn").disabled = false; $("startBtn").textContent = "Begin session"; });
+  buildSuds($("sudsPost"), v => { state.post = v; $("saveBtn").disabled = false; });
+
+  // ---------- Length ----------
+  function setLength(m) {
+    state.minutes = m;
+    document.querySelectorAll("#lengthSeg button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.min === m)));
+    prefs.minutes = m; save(PREF, prefs);
+  }
+  document.querySelectorAll("#lengthSeg button").forEach(b => b.addEventListener("click", () => setLength(+b.dataset.min)));
+  setLength(state.minutes);
+
+  // ---------- Voice ----------
+  // The Web Speech API can only use voices installed on the device, and their quality varies a lot.
+  // So: rank voices (neural/natural/premium first), hide the novelty and formant voices, let the
+  // person pick and preview, speak sentence by sentence with real pauses, and keep pitch at 1
+  // and rate near 0.9 (pitch shifting and very slow rates are what make these voices sound robotic).
+  const synth = "speechSynthesis" in window ? window.speechSynthesis : null;
+  // Pre-rendered Kokoro neural voice, one clip per sentence, injected by make_kokoro_voice.py.
+  const CLIPS = window.KOKORO_AUDIO || null;
+  const KOKORO_ID = "kokoro-built-in";
+  const canSpeak = !!(synth || CLIPS);
+  let useKokoro = false;
+  const player = new Audio(); player.preload = "auto";
+  const PACES = {
+    slow:    { rate: 0.86, play: 0.94, pause: 1300 },
+    calm:    { rate: 0.92, play: 1.0,  pause: 1000 },
+    natural: { rate: 0.98, play: 1.06, pause: 720 },
+  };
+  const NOVELTY = /\b(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Deranged|Good News|Hysterical|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Fred|Junior|Ralph|Kathy|Princess|Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley)\b/i;
+  const LIKED = /\b(Ava|Zoe|Evan|Nathan|Noelle|Serena|Kate|Daniel|Karen|Moira|Tessa|Samantha|Aria|Jenny|Sonia|Libby|Natasha|Emma|Andrew|Brian|Ryan|Guy|Michelle|Jamie|Matilda|Lee|Allison|Susan)\b/i;
+  function voiceScore(v) {
+    const id = v.name + " " + (v.voiceURI || "");
+    if (!/^en([-_]|$)/i.test(v.lang)) return -1000;
+    if (NOVELTY.test(v.name) || /eloquence/i.test(id)) return -500;
+    let s = 0;
+    if (/natural|neural/i.test(id)) s += 100;
+    if (/premium/i.test(id)) s += 95;
+    if (/enhanced/i.test(id)) s += 75;
+    if (/^Google/i.test(v.name)) s += 45;
+    if (/compact|espeak|e-speak/i.test(id)) s -= 40;
+    if (LIKED.test(v.name)) s += 8;
+    const ul = (navigator.language || "en-US").toLowerCase();
+    const vl = v.lang.toLowerCase().replace("_", "-");
+    if (vl === ul) s += 6; else if (vl.slice(0, 2) === ul.slice(0, 2)) s += 1;
+    return s;
+  }
+  const vid = v => v.voiceURI || v.name;
+  let ranked = [], voice = null;
+
+  function platformTip() {
+    const ua = navigator.userAgent;
+    if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1))
+      return "For a much more natural voice, open Settings › Accessibility › Spoken Content › Voices › English, download a voice marked Enhanced or Premium (Ava, Zoe or Evan work well), then reload this page.";
+    if (/Macintosh/.test(ua))
+      return "For a much more natural voice, open System Settings › Accessibility › Spoken Content › System voice › Manage Voices, download an English voice marked Enhanced or Premium, then reload. In Safari these appear more reliably than in Chrome.";
+    if (/Android/.test(ua))
+      return "For a more natural voice, open Settings › Text-to-speech output, choose Speech Services by Google, install the English voice data, then reload.";
+    if (/Windows/.test(ua))
+      return /Edg\//.test(ua) ? "Pick a voice marked Natural, such as Aria, Jenny or Sonia." : "Open this page in Microsoft Edge for natural voices such as Aria, Jenny and Sonia.";
+    return "Voices marked Natural, Premium or Enhanced sound the most human.";
+  }
+
+  function loadVoices() {
+    const all = synth ? synth.getVoices() : [];
+    if (!all.length && !CLIPS) return;
+    ranked = all.map(v => ({ v, s: voiceScore(v) })).filter(x => x.s > -500).sort((a, b) => b.s - a.s);
+    if (!ranked.length && all.length) ranked = all.map(v => ({ v, s: 0 }));
+    const sel = $("voiceSel");
+    const groups = [["Most natural", x => x.s >= 70], ["Good", x => x.s >= 40 && x.s < 70], ["Basic", x => x.s < 40]];
+    const kokoroOpt = CLIPS ? `<optgroup label="Built into this file"><option value="${KOKORO_ID}">Kokoro neural voice${CLIPS.__voice ? " · " + CLIPS.__voice : ""}</option></optgroup>` : "";
+    sel.innerHTML = kokoroOpt + groups.map(([label, f]) => {
+      const items = ranked.filter(f);
+      if (!items.length) return "";
+      return `<optgroup label="${label}">` + items.map(({ v }) =>
+        `<option value="${vid(v).replace(/"/g, "&quot;")}">${v.name.replace(/</g, "&lt;")} · ${v.lang}</option>`).join("") + `</optgroup>`;
+    }).join("");
+    const saved = prefs.voiceId && prefs.voiceId !== KOKORO_ID && ranked.find(x => vid(x.v) === prefs.voiceId);
+    if (CLIPS && !saved) { useKokoro = true; voice = null; sel.value = KOKORO_ID; }
+    else { useKokoro = false; voice = (saved || ranked[0]).v; sel.value = vid(voice); }
+    $("voiceTip").hidden = useKokoro || (ranked[0] && ranked[0].s >= 70);
+    $("voiceTip").textContent = platformTip();
+  }
+
+  if (canSpeak) {
+    loadVoices();
+    if (synth) {
+      synth.addEventListener?.("voiceschanged", loadVoices);
+      if ("onvoiceschanged" in synth && !synth.addEventListener) synth.onvoiceschanged = loadVoices;
+      // some browsers (iOS Safari) fill the list late and never fire the event
+      let tries = 0; const poll = setInterval(() => { if (ranked.length || ++tries > 20) clearInterval(poll); else loadVoices(); }, 250);
+    }
+  } else {
+    $("voiceOn").checked = false; $("voiceOn").disabled = true; state.voice = false;
+    $("voiceControls").hidden = true;
+    $("voiceNote").textContent = "This browser has no speech voices. Guidance appears as text.";
+  }
+
+  $("voiceSel").addEventListener("change", e => {
+    if (e.target.value === KOKORO_ID) { useKokoro = true; prefs.voiceId = KOKORO_ID; save(PREF, prefs); preview(); return; }
+    const hit = ranked.find(x => vid(x.v) === e.target.value);
+    if (hit) { useKokoro = false; voice = hit.v; prefs.voiceId = vid(voice); save(PREF, prefs); preview(); }
+  });
+
+  function setPace(p) {
+    state.pace = PACES[p] ? p : "calm";
+    document.querySelectorAll("#paceSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.pace === state.pace)));
+    prefs.pace = state.pace; save(PREF, prefs);
+  }
+  document.querySelectorAll("#paceSeg button").forEach(b => b.addEventListener("click", () => { setPace(b.dataset.pace); preview(); }));
+  setPace(state.pace);
+
+  function syncVoiceToggle() { $("voiceControls").hidden = !canSpeak || !state.voice; }
+  $("voiceOn").checked = !!(canSpeak && state.voice);
+  syncVoiceToggle();
+  $("voiceOn").addEventListener("change", e => { state.voice = e.target.checked; prefs.voice = state.voice; save(PREF, prefs); if (!state.voice) stopSpeech(); syncVoiceToggle(); });
+
+  // Sentence-by-sentence speech with pauses. Calls done() when the whole line has been spoken.
+  let speakToken = 0;
+  const live = []; // keeps utterances referenced so Chrome doesn't drop their end events
+  const sentences = t => (t.match(/[^.!?]+[.!?]*/g) || [t]).map(s => s.trim()).filter(Boolean);
+  function speakLine(text, done, force, onPart) {
+    if (!canSpeak || (!state.voice && !force)) { done(); return; }
+    const token = ++speakToken;
+    const parts = sentences(text);
+    const pace = PACES[state.pace];
+    let i = 0;
+    const nextPart = () => {
+      if (token !== speakToken) return;
+      if (i >= parts.length) { done(); return; }
+      const part = parts[i++];
+      if (onPart) onPart(i - 1);
+      let finished = false, watchdog = 0;
+      const fin = () => {
+        if (finished) return; finished = true; clearTimeout(watchdog);
+        if (token !== speakToken) return;
+        setTimeout(nextPart, i < parts.length ? pace.pause : 0);
+      };
+      const words = part.split(/\s+/).length;
+      watchdog = setTimeout(fin, (words / (2.2 * pace.rate)) * 1000 + 4000);
+      const clip = useKokoro && CLIPS ? CLIPS[part] : null;
+      if (clip) {
+        player.onended = fin; player.onerror = fin;
+        player.src = clip;
+        player.defaultPlaybackRate = pace.play; player.playbackRate = pace.play;
+        const pr = player.play(); if (pr && pr.catch) pr.catch(fin);
+      } else if (synth) {
+        const u = new SpeechSynthesisUtterance(part);
+        if (voice) { u.voice = voice; u.lang = voice.lang; }
+        u.rate = pace.rate; u.pitch = 1; u.volume = 1;
+        u.onend = fin; u.onerror = fin;
+        live.push(u); if (live.length > 8) live.shift();
+        synth.speak(u);
+      } else fin();
+    };
+    nextPart();
+  }
+  function stopSpeech() { speakToken++; if (synth) synth.cancel(); try { player.pause(); } catch {} }
+  function preview() {
+    if (!canSpeak) return;
+    stopSpeech();
+    speakLine(PREVIEW_TEXT, () => {}, true);
+  }
+  $("previewBtn").addEventListener("click", preview);
+
+  function updateMuteLabel() {
+    const off = !state.voice, b = $("muteBtn");
+    $("muteLabel").textContent = off ? "Voice off" : "Voice on";
+    b.classList.toggle("muted", off); b.setAttribute("aria-label", off ? "Turn voice on" : "Turn voice off");
+    b.removeAttribute("aria-pressed"); b.hidden = !canSpeak;
+    $("caption").classList.toggle("all", off);
+  }
+  $("muteBtn").addEventListener("click", () => {
+    if (!canSpeak) return;
+    state.voice = !state.voice;
+    if (!state.voice) { stopSpeech(); if (run) { run.busy = false; run.idleSince = performance.now(); } }
+    prefs.voice = state.voice; save(PREF, prefs); $("voiceOn").checked = state.voice; syncVoiceToggle();
+    updateMuteLabel();
+  });
+
+  // ---------- Session timeline ----------
+  function buildTimeline(minutes) {
+    const total = minutes * 60;
+    const events = []; let t0 = 0;
+    SCRIPT.forEach((ph, pi) => {
+      const len = ph.frac * total;
+      const lines = ph.lines.filter(l => l[0] <= minutes).map(l => l[1]);
+      const gap = len / lines.length;
+      lines.forEach((text, i) => events.push({ at: t0 + i * gap + (pi === 0 && i === 0 ? 0 : 0.6), phase: pi, text }));
+      t0 += len;
+    });
+    return { total, events };
+  }
+
+  let run = null;
+  function startSession() {
+    const tl = buildTimeline(state.minutes);
+    state.endedEarly = false; state.post = null;
+    run = { tl, start: performance.now(), next: 0, phase: -1, raf: 0, iv: 0, wake: null, busy: false, idleSince: performance.now() };
+    let acc = 0;
+    run.bounds = SCRIPT.map(p => { const a = acc; acc += p.frac * tl.total; return [a, acc]; });
+    // bar widths are proportional to how long each phase actually lasts
+    $("track").innerHTML = SCRIPT.map(p => `<div class="ph" style="--f:${p.frac}"><div class="bar"><i></i></div><span class="lbl">${p.name}</span></div>`).join("");
+    run.bars = [...$("track").querySelectorAll(".bar i")];
+    $("anchor").textContent = ""; $("sPhase").textContent = ""; $("caption").textContent = "";
+    disarmEnd();
+    const s = $("session");
+    s.classList.remove("leaving", "idle"); s.hidden = false; document.body.style.overflow = "hidden";
+    readColors(); wakeControls();
+    updateMuteLabel();
+    stopSpeech();
+    tick(); // fires first line inside the click gesture (needed for iOS speech)
+    run.iv = setInterval(tick, 250);
+    run.raf = requestAnimationFrame(draw);
+    try { navigator.wakeLock?.request("screen").then(w => { if (run) run.wake = w; }).catch(() => {}); } catch {}
+  }
+
+  function setPhase(i) {
+    run.phase = i;
+    [...$("track").children].forEach((el, k) => el.classList.toggle("on", k === i));
+    $("sPhase").textContent = SCRIPT[i].name;
+    const a = $("anchor");
+    if (!a.textContent) { a.textContent = SCRIPT[i].anchor; return; }
+    a.classList.add("swap");
+    setTimeout(() => { a.textContent = SCRIPT[i].anchor; a.classList.remove("swap"); }, 1000);
+  }
+
+  function tick() {
+    if (!run) return;
+    const el = (performance.now() - run.start) / 1000;
+    const left = Math.max(0, run.tl.total - el);
+    $("clock").textContent = `${Math.floor(Math.ceil(left) / 60)}:${String(Math.ceil(left) % 60).padStart(2, "0")}`;
+    run.bounds.forEach(([a, b], k) => { run.bars[k].style.width = (Math.max(0, Math.min(1, (el - a) / (b - a))) * 100).toFixed(2) + "%"; });
+    // A line starts at its scheduled time, or as soon as the previous line has finished speaking,
+    // so lines never pile up and the caption always matches what is being said.
+    if (!run.busy && run.next < run.tl.events.length && run.tl.events[run.next].at <= el) {
+      const ev = run.tl.events[run.next++];
+      if (ev.phase !== run.phase) setPhase(ev.phase);
+      showCaption(ev.text);
+      run.busy = true;
+      const thisRun = run;
+      speakLine(ev.text, () => { if (run === thisRun) { run.busy = false; run.idleSince = performance.now(); } }, false,
+        k => { if (run === thisRun) markPart(k); });
+    }
+    const allSaid = run.next >= run.tl.events.length && !run.busy;
+    if ((el >= run.tl.total && allSaid && performance.now() - run.idleSince > 1500) || el > run.tl.total + 30) finishSession(false);
+  }
+
+  // Caption: every sentence of the line is visible; the one being spoken is full strength.
+  const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  function showCaption(text) {
+    const c = $("caption");
+    c.innerHTML = sentences(text).map(s => `<span>${esc(s)}</span>`).join(" ");
+    c.classList.toggle("all", !(canSpeak && state.voice));
+    c.classList.remove("enter"); void c.offsetWidth; c.classList.add("enter");
+  }
+  function markPart(k) { [...$("caption").children].forEach((s, i) => s.classList.toggle("now", i === k)); }
+
+  function finishSession(early) {
+    if (!run) return;
+    const r = run; run = null;
+    clearInterval(r.iv); cancelAnimationFrame(r.raf);
+    try { r.wake?.release(); } catch {}
+    stopSpeech(); disarmEnd(); clearTimeout(idleTimer);
+    state.endedEarly = early;
+    const s = $("session");
+    const close = () => {
+      s.hidden = true; s.classList.remove("leaving"); document.body.style.overflow = "";
+      $("caption").textContent = "";
+      show("post");
+      $("postEyebrow").textContent = early ? "Ended early" : "Session complete";
+      resetSuds($("sudsPost")); $("saveBtn").disabled = true;
+      window.scrollTo(0, 0);
+    };
+    if (early || reduce) close(); else { s.classList.add("leaving"); setTimeout(close, 600); }
+  }
+
+  // Ending early takes a second tap, so leaving is a choice rather than a reflex.
+  let endTimer = 0;
+  function disarmEnd() { clearTimeout(endTimer); endTimer = 0; $("endBtn").classList.remove("armed"); $("endLabel").textContent = "End session"; }
+  $("endBtn").addEventListener("click", () => {
+    if (endTimer) { finishSession(true); return; }
+    $("endBtn").classList.add("armed"); $("endLabel").textContent = "Tap again to end";
+    endTimer = setTimeout(disarmEnd, 3500);
+  });
+
+  // Controls fade back after a few seconds without input.
+  let idleTimer = 0;
+  function wakeControls() {
+    const s = $("session"); s.classList.remove("idle"); clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => { if (run) s.classList.add("idle"); }, 4000);
+  }
+  ["pointermove", "pointerdown"].forEach(ev => $("session").addEventListener(ev, wakeControls, { passive: true }));
+  document.addEventListener("keydown", () => { if (run) wakeControls(); });
+
+  // ---------- Focal shape (slow drift, not a breath pacer) ----------
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const cv = $("shape"), ctx = cv.getContext("2d");
+  let colors = { a: "#a9c3c5", b: "#c9d8d4" };
+  function readColors() {
+    const g = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+    colors = { a: g("--shape-a") || colors.a, b: g("--shape-b") || colors.b };
+  }
+  try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", readColors); } catch {}
+  function rgba(hex, al) {
+    let h = hex.replace("#", ""); if (h.length === 3) h = h.split("").map(c => c + c).join("");
+    const n = parseInt(h, 16); return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${al})`;
+  }
+  // irregular outline; periods are long and incommensurate so nothing pulses on a rhythm
+  function blobPath(t, base, cx, cy, ph) {
+    ctx.beginPath();
+    for (let i = 0; i <= 120; i++) {
+      const a = (i / 120) * Math.PI * 2;
+      const r = base * (1
+        + 0.045 * Math.sin(2 * a + t * 0.11 + ph)
+        + 0.030 * Math.sin(3 * a - t * 0.07 + 1.3 + ph)
+        + 0.020 * Math.sin(5 * a + t * 0.05 + 2.1 - ph)
+        + 0.022 * Math.sin(t * 0.083 + ph));
+      const x = cx + r * Math.cos(a), y = cy + r * Math.sin(a);
+      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    }
+    ctx.closePath();
+  }
+  function draw(now) {
+    if (!run) return;
+    const t = ((now - run.start) / 1000) * (reduce ? 0.25 : 1);
+    const W = cv.width, H = cv.height, base = W * 0.32;
+    const cx = W / 2 + Math.sin(t * 0.031) * base * 0.06, cy = H / 2 + Math.cos(t * 0.027) * base * 0.05;
+    ctx.clearRect(0, 0, W, H);
+    const halo = ctx.createRadialGradient(cx, cy, base * 0.8, cx, cy, base * 1.5);
+    halo.addColorStop(0, rgba(colors.b, 0.32)); halo.addColorStop(0.5, rgba(colors.b, 0.1)); halo.addColorStop(1, rgba(colors.b, 0));
+    ctx.fillStyle = halo; ctx.fillRect(0, 0, W, H);
+    blobPath(t * 0.8, base * 1.13, cx + Math.sin(t * 0.019) * base * 0.05, cy + Math.cos(t * 0.023) * base * 0.05, 2.4);
+    ctx.fillStyle = rgba(colors.a, 0.38); ctx.fill();
+    const grad = ctx.createRadialGradient(cx - base * 0.3, cy - base * 0.35, base * 0.05, cx, cy, base * 1.2);
+    grad.addColorStop(0, colors.b); grad.addColorStop(1, colors.a);
+    blobPath(t, base, cx, cy, 0);
+    ctx.fillStyle = grad; ctx.fill();
+    run.raf = requestAnimationFrame(draw);
+  }
+
+  // ---------- Save + results ----------
+  $("saveBtn").addEventListener("click", () => {
+    const sessions = load(KEY, []);
+    const rec = { date: new Date().toISOString(), minutes: state.minutes, pre: state.pre, post: state.post, completed: !state.endedEarly };
+    sessions.push(rec);
+    const ok = save(KEY, sessions);
+    renderResult(rec, ok);
+    renderTrend();
+    show("results");
+    window.scrollTo(0, 0);
+  });
+
+  function renderResult(rec, ok) {
+    $("lastResult").innerHTML = `
+      <p class="eyebrow">${rec.completed ? "Session saved" : "Ended early, saved"} · ${rec.minutes} min</p>
+      <div class="result-pair">
+        <div><div class="small muted">Before</div><b>${rec.pre}</b></div>
+        <div><div class="small muted">After</div><b>${rec.post}</b></div>
+      </div>
+      ${ok ? "" : `<p class="note">This browser blocked storage, so the ratings were not kept. Private browsing often causes this.</p>`}`;
+  }
+
+  function fmtDate(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { day: "numeric", month: "short" }) + " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function renderTrend() {
+    const all = load(KEY, []);
+    const box = $("trend");
+    if (!all.length) {
+      box.innerHTML = `<p class="muted">After your first session, before and after ratings appear here as a chart and a list.</p>`;
+      $("clearRow").innerHTML = ""; return;
+    }
+    const data = all.slice(-20);
+    const W = 600, H = 220, L = 34, R = 14, T = 14, B = 30;
+    const n = data.length;
+    const x = i => n === 1 ? (L + (W - R)) / 2 : L + i * ((W - L - R) / (n - 1));
+    const y = v => T + (10 - v) * ((H - T - B) / 10);
+    let svg = `<svg class="chart" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Before and after anxiety ratings for the last ${n} sessions">`;
+    [0, 5, 10].forEach(v => {
+      svg += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/>`;
+      svg += `<text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+    });
+    data.forEach((d, i) => svg += `<line x1="${x(i)}" x2="${x(i)}" y1="${y(d.pre)}" y2="${y(d.post)}" stroke="var(--line)" stroke-width="3" stroke-linecap="round"/>`);
+    const path = key => data.map((d, i) => `${i ? "L" : "M"}${x(i)},${y(d[key])}`).join(" ");
+    if (n > 1) {
+      svg += `<path d="${path("pre")}" fill="none" stroke="var(--pre)" stroke-width="1.5" stroke-dasharray="4 4"/>`;
+      svg += `<path d="${path("post")}" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
+    }
+    data.forEach((d, i) => {
+      svg += `<circle cx="${x(i)}" cy="${y(d.pre)}" r="5" fill="var(--bg)" stroke="var(--pre)" stroke-width="2"/>`;
+      svg += `<circle cx="${x(i)}" cy="${y(d.post)}" r="5" fill="var(--accent)"/>`;
+    });
+    const dlabel = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+    svg += `<text x="${x(0)}" y="${H - 8}" text-anchor="${n === 1 ? "middle" : "start"}">${dlabel(data[0].date)}</text>`;
+    if (n > 1) svg += `<text x="${x(n - 1)}" y="${H - 8}" text-anchor="end">${dlabel(data[n - 1].date)}</text>`;
+    svg += `</svg>`;
+
+    const rows = all.slice(-10).reverse().map(d => `<tr><td>${fmtDate(d.date)}</td><td class="num">${d.minutes}m</td><td class="num">${d.pre}</td><td class="num">${d.post}</td><td class="small muted">${d.completed ? "" : "ended early"}</td></tr>`).join("");
+    box.innerHTML = `
+      <div class="stack">
+        <div class="legend"><span><i style="border:2px solid var(--pre);background:var(--bg)"></i>Before</span><span><i style="background:var(--accent)"></i>After</span><span>${all.length} session${all.length > 1 ? "s" : ""}${all.length > 20 ? ", last 20 shown" : ""}</span></div>
+        <div class="chart-wrap">${svg}</div>
+        <div class="chart-wrap"><table><thead><tr><th>Date</th><th>Len</th><th>Before</th><th>After</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+      </div>`;
+    $("clearRow").innerHTML = `<button class="btn ghost" id="clearBtn" type="button">Clear history</button>`;
+    $("clearBtn").addEventListener("click", askClear);
+  }
+
+  function askClear() {
+    $("clearRow").innerHTML = `<span class="small">Delete all saved ratings?</span>
+      <button class="btn ghost" id="clearYes" type="button">Delete</button>
+      <button class="btn ghost" id="clearNo" type="button">Keep</button>`;
+    $("clearYes").addEventListener("click", () => { save(KEY, []); renderTrend(); });
+    $("clearNo").addEventListener("click", renderTrend);
+  }
+
+  // ---------- Navigation ----------
+  function show(id) { ["setup", "post", "results"].forEach(s => $(s).hidden = s !== id); $("history").hidden = id === "post"; }
+  function toSetup() {
+    state.pre = null; resetSuds($("sudsPre"));
+    $("startBtn").disabled = true; $("startBtn").textContent = "Rate anxiety to begin";
+    show("setup"); window.scrollTo(0, 0);
+  }
+  $("startBtn").addEventListener("click", () => { if (state.pre !== null) startSession(); });
+  $("repeatBtn").addEventListener("click", toSetup);
+  $("homeBtn").addEventListener("click", toSetup);
+
+  renderTrend();
+})();
+</script>
+</html>
